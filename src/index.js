@@ -5,6 +5,33 @@ $(document).ready(function () {
     getCatMemes();
     getCurrentMeme();
 
+    $('#updateCurrentMeme').click(() => {
+        const fileType = (currentMeme.mimetype === 'image/png') ? '.png' : '.jpg';
+        const body = { 
+            filename: 'http://localhost:3005/images/' + currentMeme.filename + fileType,
+            mimetype: currentMeme.mimetype,
+            toptext: $('#memeTopText').val(),
+            bottomtext: $('#memeBottomText').val()
+        };
+        $.ajax({
+            url:'http://localhost:3005/api/creatememe/',
+            type: 'POST',
+            processData: false,
+            contentType: 'application/json',
+            data: JSON.stringify(body),
+            success: (res) => {
+                console.log('Success!');
+                const url = 'data:' + currentMeme.mimetype + ';base64,' + res;
+                $('#currentMeme').attr('src', url);
+                window.URL.revokeObjectURL(url);
+            },
+            error: (err) => {
+                console.log(err);
+                alert('Error: In sending the request!');
+            }
+        });
+    });
+
     $('#saveCurrentMeme').click(() => {
         $.ajax({
             url:'http://localhost:3005/api/savecurrent/',
@@ -75,8 +102,7 @@ $(document).ready(function () {
             } else {
                 currentMeme = meme;
                 const fileType = (meme.mimetype === 'image/png') ? '.png' : '.jpg';
-                let img = '<img class="memeImage" src="http://localhost:3005/images/' + meme.filename + fileType +'">';
-                $('#currentMeme').html(img);
+                $('#currentMeme').attr('src', 'http://localhost:3005/images/' + meme.filename + fileType);
             }
         });
     }

@@ -66,9 +66,24 @@
 
                 <div class="tab-pane fade" id="v-pills-create" role="tabpanel" aria-labelledby="v-pills-create-tab"
                     tabindex="0">
-                    <div class="col-auto" id="currentMeme">
-                        
-                    </div>                    
+                    <div class="col-auto">
+                        <img id="currentMeme" class="memeImage" src="" />
+                    </div>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon3">Top Text</span>
+                        </div>
+                        <input id="memeTopText" class="form-control" type="text">
+                    </div>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon3">Bottom Text</span>
+                        </div>
+                        <input id="memeBottomText" class="form-control" type="text">
+                    </div>
+                    <div class="col-auto">
+                        <button id="updateCurrentMeme" type="submit" class="btn btn-primary mb-3">Update</button>
+                    </div>
                     <div class="col-auto">
                         <button id="saveCurrentMeme" type="submit" class="btn btn-primary mb-3">Save Cat
                             Meme</button>

@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "description": "Final Project Example for 67-328 - Full Stack",
   "main": "index.js",
-
   "scripts": {
-    "lite": "lite-server --baseDir ./src" ,
+    "lite": "lite-server --baseDir ./src",
     "start": "npm run lite"
   },
   "repository": {
