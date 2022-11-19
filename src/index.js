@@ -1,20 +1,23 @@
 $(document).ready(function () {
 
+    const imgServer = 'http://localhost:3005/images/';
+    const apiServer = 'http://localhost:3005/api/';
+
     let catMemes = [];
     let currentMeme = undefined;
     getCatMemes();
     getCurrentMeme();
 
+
     $('#updateCurrentMeme').click(() => {
-        const fileType = (currentMeme.mimetype === 'image/png') ? '.png' : '.jpg';
         const body = { 
-            filename: 'http://localhost:3005/images/' + currentMeme.filename + fileType,
+            filename: imgServer + currentMeme.filename + getFileExtension(currentMeme.mimetype),
             mimetype: currentMeme.mimetype,
             toptext: $('#memeTopText').val(),
             bottomtext: $('#memeBottomText').val()
         };
         $.ajax({
-            url:'http://localhost:3005/api/creatememe/',
+            url: apiServer + 'creatememe/',
             type: 'POST',
             processData: false,
             contentType: 'application/json',
@@ -34,7 +37,7 @@ $(document).ready(function () {
 
     $('#saveCurrentMeme').click(() => {
         $.ajax({
-            url:'http://localhost:3005/api/savecurrent/',
+            url: apiServer + 'savecurrent/',
             type: 'POST',
             contentType: false,
             processData: false,
@@ -43,6 +46,7 @@ $(document).ready(function () {
             success: (res) => {
                 getCatMemes();
                 getCurrentMeme();
+                $('#v-pills-view-tab').click();
                 console.log('Success!', res);
             },
             error: () => {
@@ -54,9 +58,15 @@ $(document).ready(function () {
     $("#formUpload").submit((event) => {
         event.preventDefault();
         const data = new FormData($('#formUpload')[0]);
+
+        let spinner = '<div class="spinner-border text-primary" role="status">' 
+        spinner += '<span class="visually-hidden">Loading...</span></div>';
+        $('#uploadButton').html(spinner);
+
+        let submitButton = '<button id="submitMeme" type="submit" class="btn btn-primary mb-3">Upload Cat Picture</button>';
         
         $.ajax({
-            url:'http://localhost:3005/api/upload/',
+            url: apiServer + 'upload/',
             type: 'POST',
             contentType: false,
             processData: false,
@@ -65,48 +75,91 @@ $(document).ready(function () {
             success: (res) => {
                 getCurrentMeme();
                 console.log('Success!', res);
+                setTimeout(() => {
+                    $('#uploadButton').html(submitButton);
+                    $('#v-pills-create-tab').click();
+                }, 2000);
             },
             error: () => {
                 alert('Error: In sending the request!');
+                $('#uploadButton').html(submitButton);
             }
         });
     });
 
 
     function getCatMemes() {
-        $.getJSON('http://localhost:3005/api/memes/', (memes) => {
+        $.getJSON(apiServer + 'memes/', (memes) => {
             catMemes = memes;
             let catCarousel = '';
+            let catGrid = '';
             let isFirst = true;
-            catMemes.forEach((m) => {
-                const fileType = (m.mimetype === 'image/png') ? '.png' : '.jpg';
-                const img = m.filename + fileType;
-                if (isFirst) {
-                    catCarousel = '<div class="carousel-item active">';
-                    isFirst = false;
-                } else {
-                    catCarousel += '<div class="carousel-item">';    
-                }
-                catCarousel += '<img class="memeImage" src="http://localhost:3005/images/' + img;
-                catCarousel += '" class="d-block w-150" alt="' + img + '"></div>';                       
-            });
+            if (catMemes.length === 0) {
+                catCarousel = '<h3>No Cat Memes Available</h3>'
+            } else {
+                catMemes.forEach((m) => {
+                    const img = m.filename + getFileExtension(m.mimetype);
+                    if (isFirst) {
+                        catCarousel = '<div class="carousel-item active">';
+                        isFirst = false;
+                    } else {
+                        catCarousel += '<div class="carousel-item">';    
+                    }
+                    catCarousel += '<img class="meme-image" src="' + imgServer + img;
+                    catCarousel += '" class="d-block w-150" alt="' + img + '"></div>';       
+                    
+                    const buttonId = 'button' + m.filename;
+                    catGrid += '<div class="col"><img class="grid-image" src="' + imgServer + img + '">';
+                    catGrid += '<button id="' + buttonId + '" type="button" class="btn btn-outline-danger" ';
+                    catGrid += '" value="' + m.filename + '">Delete</button></div>';
+                    $('#memeGrid').on('click', '#' + buttonId, (meme) => {
+                        deleteMeme(meme.currentTarget.value);
+                    });
+                });
+            }
             $('#catMemeCarousel').html(catCarousel);
+            $('#memeGrid').html(catGrid);
         });
     }
 
+
     function getCurrentMeme() {
-        $.getJSON('http://localhost:3005/api/currentmeme/', (meme) => {
-            if (!meme || meme === '{}') {
+        $('#displayCurrentPic').css('display', 'none');
+        $('#noCurrentPic').css('display', 'inline');
+        $.getJSON(apiServer + 'currentmeme/', (meme) => {
+            if (!meme || !meme.mimetype) {
                 currentMeme = undefined;
                 $('#currentMeme').html('<h1>No Current Meme</h1>');
             } else {
                 currentMeme = meme;
-                const fileType = (meme.mimetype === 'image/png') ? '.png' : '.jpg';
-                $('#currentMeme').attr('src', 'http://localhost:3005/images/' + meme.filename + fileType);
+                 $('#currentMeme').attr('src', imgServer + meme.filename + getFileExtension(currentMeme.mimetype));
+                 $('#displayCurrentPic').css('display', 'inline');
+                 $('#noCurrentPic').css('display', 'none');
             }
         });
     }
 
+
+    function getFileExtension(mimetype) {
+        // Only supports .png and .jpg
+        return (mimetype === 'image/png') ? '.png' : '.jpg';
+    }
+
+    function deleteMeme(meme) {
+        console.log(meme);
+        if (confirm('Delete Meme?')) {
+            $.ajax({
+                url: apiServer + 'deletememe/' + meme,
+                type: 'DELETE',
+                success: (res) => {
+                    console.log('Success!', res);
+                    getCatMemes();
+                },
+                error: () => {
+                    alert('Error: Deleting Meme!');
+                }
+            });
+        }
+    }
+
 });
-
-
